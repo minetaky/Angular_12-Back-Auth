@@ -13,6 +13,7 @@ const generarJWT = ( uid, name ) => {
     
             if( err ){
                 //TODO MAL
+                console.log('error en jws.js');
                 console.log(err);
                 reject(err);
             }else{

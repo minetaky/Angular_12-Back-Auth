@@ -1,7 +1,8 @@
 const { Router } = require('express');
 const { check } = require('express-validator');
-const { crearUsuario, loginUsuario, revalidarToken, validarCampos } = require('../controllers/auth');
+const { crearUsuario, loginUsuario, revalidarToken } = require('../controllers/auth');
 const { validationResult } = require('express-validator');
+const { validarJWT } = require('../middlewares/validar-jwt');
 
 const router = Router();
 
@@ -47,8 +48,8 @@ router.post( '/', [
     }
 ], loginUsuario );
 
-//Validar y revalidar token
-router.get( '/renew', revalidarToken );
+//Validar y revalidar token, se añade: validarJWT el cual verifica sí está el token secreto
+router.get( '/renew', validarJWT, revalidarToken );
 
 
 

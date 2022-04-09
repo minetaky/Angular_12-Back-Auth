@@ -25,11 +25,11 @@ const crearUsuario = async(req, res = response ) => {
         //Crear el usuario con nuestro modelo
         const dbUser = new Usuario( req.body );
 
-        const texto1 = '' + ( (password != 'undefined' && password != '')  ? new String(password).toString: '');
+        //const texto1 = '' + ( (password != 'undefined' && password != '')  ? new String(password).toString: '');
 
         //Hashear la constraseña, encriptarla
         const salt = await bcrypt.genSaltSync(10); //Por default son 10 vueltas
-        dbUser.password = bcrypt.hashSync( texto1 , salt );
+        dbUser.password = bcrypt.hashSync( ''+password, salt );
 
 
         //Generar el Json Web Token para que Angular la use como tecnica de autenticacion pasiva
@@ -55,29 +55,89 @@ const crearUsuario = async(req, res = response ) => {
     }
 
 
-
-
-
 }
 
 
-const loginUsuario = ( req, res = response ) => { 
+
+
+
+
+const loginUsuario = async( req, res = response ) => { 
 
 
     const { email, password} = req.body;
+    const texto1 = '' + ( (password != 'undefined' && password != '')  ? new String(password).toString: '');
 
-    return res.json({
-        ok: true,
-        msg: 'Login de usuario / post'
-    });
+
+    try {
+
+        const dbUser = await Usuario.findOne( { email } );
+
+        if( !dbUser ){
+            return res.status(400).json({
+                ok: false,
+                msg: 'El correo no existe'
+            });
+        }
+
+
+        //Confirmar sí el password es valido
+        console.log(`${password},  ${dbUser.password}`)
+        const validPassword = bcrypt.compareSync( ''+password, dbUser.password  );
+        console.log('validPassword: ' + validPassword);
+
+        if( !validPassword ){
+            return res.status(400).json({
+                ok: false,
+                msg: 'El password no es válido'
+            });
+        }
+
+
+        //Generar el Json Web Token para que Angular la use como tecnica de autenticacion pasiva
+        const token = await generarJWT( dbUser.id, dbUser.name );
+
+        //Respuesta del serviio
+        return res.status(200).json({
+            ok: true,
+            uid: dbUser.id,
+            name: dbUser.name,
+            token
+        });
+
+
+        
+    } catch (error) {
+        console.log('Error en auth');
+        console.log(error);
+        return res.status(500).json({
+            ok: false,
+            msg: 'Hable con el administrador'
+        })
+    }
 
 } 
 
-const revalidarToken =  (req, res = response) => { 
 
-    return res.json({
+
+
+
+
+const revalidarToken =  async(req, res = response) => { 
+
+    //Son variables que se establecen en el middware: validarJWT ya que este es ejecutado primero y
+    //después se llama a: revalidarToken, para cando este último se ejecuta ya se tienen esas variables
+    const { uid, name } = req;
+
+    //Generar el Json Web Token para que Angular la use como tecnica de autenticacion pasiva
+    const token = await generarJWT( uid, uid );
+
+    return res.status(200).json({
         ok: true,
-        msg: 'Login de usuario /renew get'
+        uid,
+        name,
+        token
+
     });
 
 } 
