@@ -1,6 +1,8 @@
 const express = require('express');
 const  cors  = require('cors');
-const { dbConnection } = require('./db/config'); 
+const { dbConnection } = require('./db/config');
+const path = require('path');
+
 require('dotenv').config();
 
 //console.log( process.env.PORT );
@@ -25,6 +27,12 @@ app.use( express.json() );
 
 //Middleware
 app.use( '/api/auth', require('./routes/auth') );
+
+
+// Manejar demás rutas
+app.get( '*', (req, res) => {
+    res.sendFile( path.resolve( __dirname, 'public/index.html' ) );
+} )
 
 
 

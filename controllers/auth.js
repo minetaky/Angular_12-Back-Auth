@@ -43,7 +43,8 @@ const crearUsuario = async(req, res = response ) => {
             ok: true,
             uid: dbUser.id,
             name,
-            token
+            token,
+            email
         });
 
     } catch (error){
@@ -102,7 +103,8 @@ const loginUsuario = async( req, res = response ) => {
             ok: true,
             uid: dbUser.id,
             name: dbUser.name,
-            token
+            token,
+            email
         });
 
 
@@ -127,15 +129,21 @@ const revalidarToken =  async(req, res = response) => {
 
     //Son variables que se establecen en el middware: validarJWT ya que este es ejecutado primero y
     //después se llama a: revalidarToken, para cando este último se ejecuta ya se tienen esas variables
-    const { uid, name } = req;
+    const { uid } = req;
+
+    //Leer la BD para obtener el email
+    const dbUser = await Usuario.findById(uid);
+
+
 
     //Generar el Json Web Token para que Angular la use como tecnica de autenticacion pasiva
-    const token = await generarJWT( uid, uid );
+    const token = await generarJWT( uid, dbUser.name );
 
     return res.status(200).json({
         ok: true,
         uid,
-        name,
+        name: dbUser.name,
+        email: dbUser.email,
         token
 
     });
